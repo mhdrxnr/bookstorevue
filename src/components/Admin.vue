@@ -16,12 +16,12 @@ import AdminCategories from './admin/AdminCategories.vue'
 import AdminOrders from './admin/AdminOrders.vue'
 import AdminClients from './admin/AdminClients.vue'
 
-import { authStore } from '../Stores/AuthStore';
+import { authStore } from '../Stores/AuthStore'
 import { onMounted } from 'vue';
 
 
 onMounted(() => {
-  if (!authSotre.isAuthenticated || authStore.user.role !== 'admin') {
+  if (!authStore.isAuthenticated || authStore.user.role !== 'admin') {
     window.location.href = '/'; // redirect to home if not admin
   }
 });

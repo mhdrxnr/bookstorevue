@@ -2,13 +2,17 @@
 import {ref, watch} from 'vue'
 import Profile from '../../assets/User_lightbig.png'
 import { authStore} from '../../Stores/AuthStore';
-console.log('authStore.user', authStore.user)
+console.log('authStore.user', authStore.user.imageUrl)
+watch(() => authStore.user, (val) => {
+  console.log("Updated user data in Infos.vue", val)
+}, { deep: true })
+
 </script>
 
 <template>
     <div class="w-[738px] h-[691px] flex flex-col gap-[50px]">
         <div class=" w-[125px] mt-[5px] rounded-[100%] bg-cover bg-center h-[125px]"
-        :style="{ backgroundImage: authStore.user.imageUrl ? `url(${authStore.user.imageUrl})` : `url(${Profile})` }">
+        :style="{ backgroundImage: `url(${authStore.user.imageUrl || Profile})` }">
 
         </div>
         <div class="w-[738px] h-[406px] flex justify-between">

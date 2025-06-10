@@ -64,6 +64,7 @@ function goToLogin() {
 
 async function register() {
   try {
+    // Register the user
     const response = await axios.post('/users', {
       email: email.value,
       password: password.value,
@@ -71,17 +72,20 @@ async function register() {
       number: number.value,
     })
 
-    alert(response.data.message)
-    authStore.login() // Optional: auto-login or redirect after registration
+    alert(response.data.message || 'Registration successful')
+
+    // Auto-login with the registered credentials
+    await authStore.loginWithApi(email.value, password.value)
   } catch (error) {
-    if (error.response && error.response.data.errors) {
-      console.log(error.response.data.errors)
-      alert('Registration failed: ' + Object.values(error.response.data.errors).flat().join(', '))
+    if (error.response?.data?.errors) {
+      const errors = Object.values(error.response.data.errors).flat().join(', ')
+      alert('Registration failed: ' + errors)
     } else {
-      alert('Unexpected error occurred.')
+      alert('Unexpected error occurred during registration.')
     }
   }
 }
+
 </script>
 
 <template>

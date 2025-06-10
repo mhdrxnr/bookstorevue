@@ -50,8 +50,10 @@ async function login() {
   }
 
   try {
-    await authStore.loginWithApi(email.value, password.value)
-  } catch (e) {
+await authStore.loginWithApi(email.value, password.value)
+if (!authStore.user.client_id) {
+  error.value = 'No client profile found for this user.'
+}  } catch (e) {
     error.value = 'Login failed. Please check your credentials.'
   }
 }
@@ -85,7 +87,7 @@ function goToRegister() {
                 <input v-model="password"  minlength="8" type="password" required placeholder="enter your password " class="inputL outline-none text-forest-green rounded-[12px] w-[314px] p-[20px] h-[40px] cairo-regular border-1 border-forest-green placeholder:text-forest-green placeholder:text-[20px]" id="password">
               </div>
         <div class="flex gap-[20px] justify-center w-[314px]">
-          <button type="submit" @click="goToRegister" class="cairo-regular cursor-pointer font-bold text-warm-beige text-[20px] rounded-[6px] bg-forest-green h-[35px] w-[125px]">
+          <button type="button" @click="goToRegister" class="cairo-regular cursor-pointer font-bold text-warm-beige text-[20px] rounded-[6px] bg-forest-green h-[35px] w-[125px]">
             Create One
           </button>
           <button type="submit" class="cairo-regular cursor-pointer font-bold text-forest-green text-[20px] rounded-[6px] border-2 border-forest-green h-[35px] w-[125px]">
