@@ -8,7 +8,7 @@ export const authStore = reactive({
   isAuthenticated: false,
   showProfile: false,
   isLoading: true,
-  currentPage: 'store',
+  currentPage: localStorage.getItem('current_page') || 'landing',
   token: null,
   user: {
     user_id: null,
@@ -23,8 +23,47 @@ export const authStore = reactive({
     role: 'client'
   },
 
+  async restoreSession() {
+  try {
+    await api.get('/sanctum/csrf-cookie') // Always safe to refresh cookie
+    const response = await api.get('/api/me') // ✅ call backend to get real user session
+
+    const user = response.data
+    const client = user.client || {}
+
+    this.setUser({
+      user_id: user.user_id,
+      client_id: client.client_id || null,
+      firstName: client.firstName || '',
+      lastName: client.lastName || '',
+      email: user.email || '',
+      number: client.number || '',
+      address: client.address || '',
+      wilaya: client.wilaya || '',
+      imageUrl: client.imageUrl || '',
+      role: user.role
+    })
+
+    this.isAuthenticated = true
+    const storedPage = localStorage.getItem('current_page')
+    if (storedPage) {
+      this.currentPage = storedPage
+      router.push('/' + storedPage)
+    }
+  } catch (error) {
+    console.warn('Session restore failed:', error)
+    this.isAuthenticated = false
+    this.token = null
+    localStorage.removeItem('auth_user')
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('current_page')
+    this.currentPage = 'landing'
+    router.push('/landing')
+  }
+},
+
+
   setUser(userData) {
-    console.log('Setting user:', userData)
     this.user = {
       user_id: userData.user_id,
       client_id: userData.client_id,
@@ -37,6 +76,9 @@ export const authStore = reactive({
       imageUrl: userData.imageUrl || '',
       role: userData.role || 'client'
     }
+
+    localStorage.setItem('auth_user', JSON.stringify(this.user))
+    localStorage.setItem('auth_token', this.token || '')
   },
 
   async loginWithApi(email, password) {
@@ -47,11 +89,12 @@ export const authStore = reactive({
       const user = response.data.user
       const client = response.data.client
 
+      this.token = response.data.token || ''
       this.setUser({
         user_id: user.user_id,
         client_id: client?.client_id || null,
         firstName: client?.firstName || '',
-        lastName: client?.lastName ||  '',
+        lastName: client?.lastName || '',
         email: user.email,
         number: client?.number || '',
         address: client?.address || '',
@@ -69,33 +112,26 @@ export const authStore = reactive({
         this.currentPage = 'store'
         router.push('/store')
       }
-
+      localStorage.setItem('current_page', this.currentPage)
       this.closePopup()
     } catch (error) {
       console.error('Login failed:', error)
-      if (error.response?.status === 401) {
-        alert('Incorrect credentials or account not found. Please create an account.')
-      } else {
-        alert(error.response?.data?.message || 'Login failed. Please try again.')
-      }
+      alert(error.response?.data?.message || 'Login failed. Please try again.')
     }
   },
+
   async updateUser(userPayload) {
-  if (!this.user.user_id) throw new Error('No user_id set')
-  return api.put(`/api/users/${this.user.user_id}`, userPayload)
-},
+    if (!this.user.user_id) throw new Error('No user_id set')
+    return api.put(`/api/users/${this.user.user_id}`, userPayload)
+  },
 
-async updateClient(payload) {
-  if (!this.user.client_id) throw new Error('No client_id set')
-
-  const config = {
-    headers: {
-      'Content-Type': 'multipart/form-data'
+  async updateClient(payload) {
+    if (!this.user.client_id) throw new Error('No client_id set')
+    const config = {
+      headers: { 'Content-Type': 'multipart/form-data' }
     }
-  }
-
-  return api.post(`/api/clients/${this.user.client_id}?_method=PUT`, payload, config)
-},
+    return api.post(`/api/clients/${this.user.client_id}?_method=PUT`, payload, config)
+  },
 
   async logout() {
     try {
@@ -118,6 +154,9 @@ async updateClient(payload) {
     }
     this.isAuthenticated = false
     this.currentPage = 'landing'
+    localStorage.removeItem('auth_user')
+    localStorage.removeItem('auth_token')
+    localStorage.removeItem('current_page')
     window.location.href = '/landing'
   },
 
@@ -125,26 +164,29 @@ async updateClient(payload) {
   this.isLoading = true
   try {
     const response = await api.get('/api/user')
-    // If response.data has user and client objects
-    if (response.data.user && response.data.client) {
+    const user = response.data.user
+    const client = response.data.client
+
+    if (user && client) {
       this.setUser({
-        user_id: response.data.user.user_id,
-        client_id: response.data.client?.client_id || null,
-        firstName: response.data.client?.firstName || '',
-        lastName: response.data.client?.lastName || '',
-        email: response.data.user.email || '',
-        number: response.data.client?.number || '',
-        address: response.data.client?.address || '',
-        wilaya: response.data.client?.wilaya || '',
-        imageUrl: response.data.client?.imageUrl || '',
-        role: response.data.user.role
+        user_id: user.user_id,
+        client_id: client?.client_id || null,
+        firstName: client?.firstName || '',
+        lastName: client?.lastName || '',
+        email: user.email || '',
+        number: client?.number || '',
+        address: client?.address || '',
+        wilaya: client?.wilaya || '',
+        imageUrl: client?.imageUrl || '',
+        role: user.role
       })
+      this.isAuthenticated = true // ✅ make sure this is set
     } else {
-      // fallback for flat structure
-      this.setUser(response.data)
+      this.user = null
+      this.isAuthenticated = false
     }
-    this.isAuthenticated = true
   } catch (error) {
+    console.error('fetchUser failed', error)
     this.user = null
     this.isAuthenticated = false
   } finally {
@@ -152,7 +194,6 @@ async updateClient(payload) {
   }
 },
 
-  // UI helpers
   toggleLogin() {
     this.showLogin = !this.showLogin
     if (this.showLogin) this.showRegister = false
@@ -171,14 +212,17 @@ async updateClient(payload) {
   },
   goToProfile() {
     this.currentPage = 'profile'
+    localStorage.setItem('current_page', 'profile')
     router.push('/profile')
   },
   goToStore() {
     this.currentPage = 'store'
+    localStorage.setItem('current_page', 'store')
     router.push('/store')
   },
   goToAdmin() {
     this.currentPage = 'admin'
+    localStorage.setItem('current_page', 'admin')
     router.push('/admin')
   },
   isAdmin() {

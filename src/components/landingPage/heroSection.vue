@@ -6,12 +6,12 @@ import navBar from './navBar.vue';
 
 <template>
     <div  class=" hero flex flex-col h-[650px]">
-           <navBar/>
+           <navBar />
            <SideBar class="fixed top-[20%] z-40 right-[0px] w-full"/>
 
             <div class="content absolute top-[7%] flex gap-[25px] justify-center flex-col-reverse ml-[25px] h-screen">
                 <button class="slide-in-left2 w-[200px] rounded-[2px] border-[1px] border-clean-white h-[50px] cursor-pointer text-clean-white font-semibold hover:font-[800] hover:bg-warm-beige  hover:text-soft-shadow delay-[.1s] hover:border-0 transition-all z-50">
-                    <a href="" class=" cairo-regular text-[20px] ">EXPLORE NOW</a>
+                    <a href="#Service" class=" cairo-regular text-[20px] ">EXPLORE NOW</a>
                     </button>
                 <div class="w-[534px] h-[120px]">
                     <p class="slide-in-left cairo-regular text-clean-white">At Yasmine elghareb, we bring you a handpicked selection of timeless books in

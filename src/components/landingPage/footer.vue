@@ -17,6 +17,7 @@
         <div class="flex w-[646px] justify-between items-center">
             <div>
                 <div class="flex flex-col-reverse gap-[15px]">
+                    <!-- hadi te3 address  -->
                     <div class="flex items-center justify-between w-[279px] h-[60px]">
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none">
                             <path stroke="#D6C7A4" stroke-linecap="round" 
@@ -30,6 +31,7 @@
                             <p class="cairo-regular text-clean-white text-[16px] ">Rue Mousa Tayeb, Mostaganem</p>
                         </div>
                     </div>
+                    <!-- te3 phone -->
                     <div class="flex items-center gap-[25px] w-[279px] h-[60px]">
                         <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none">
                             <path stroke="#D6C7A4" 
@@ -40,6 +42,7 @@
                             <p class="cairo-regular text-clean-white text-[16px] ">0668413395</p>
                         </div>
                     </div>
+                    <!--  -->
                     <div class="flex items-center gap-[25px] w-[279px] h-[60px]">
                     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" fill="none">
                         <rect width="33" height="25" x="3" y="7" stroke="#D6C7A4" rx="2"/>

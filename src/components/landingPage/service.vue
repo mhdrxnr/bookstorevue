@@ -2,7 +2,15 @@
 import Feedback from '../../assets/Feedback 3D Model (HD).png'
 import Book from '../../assets/Open Book And Bulb 3D Illustration.png'
 import Box from '../../assets/Box Protection.png'
-import AboutImg from "../../assets/aboutImg.jpg"
+import { authStore } from '../../Stores/AuthStore'
+
+function onProfileClick() {
+  if (authStore.isAuthenticated) {
+    authStore.goToProfile()
+  } else {
+    authStore.toggleLogin()
+  }
+}
 </script>
 
 <template>
@@ -31,7 +39,7 @@ import AboutImg from "../../assets/aboutImg.jpg"
         <div class="w-[420px] h-[515px] rounded-[4px] flex flex-col-reverse items-center pt-[25px] justify-end bg-forest-green">
             <div class="w-[372px] flex justify-between items-center">
                 <p class="cairo-regular text-clean-white text-[15px]">Shop Thoughtfully Selected Books</p>
-                <button class="bg-warm-beige  text-forest-green flex items-center justify-evenly pl-[10px] gap-0 rounded-[2px] cairo-regular font-semibold w-[138px] h-[47px] text-[18px] hover:text-warm-beige hover:bg-forest-green hover:border-[1px] transition-all z-50">SHOP NOW
+                <button @click="onProfileClick" class="bg-warm-beige  text-forest-green flex items-center justify-evenly pl-[10px] gap-0 rounded-[2px] cairo-regular font-semibold w-[138px] h-[47px] text-[18px] hover:text-warm-beige hover:bg-forest-green hover:border-[1px] transition-all z-50">SHOP NOW
                     <svg class="fill-forest-green transition-all hover:fill-warm-beige" xmlns="http://www.w3.org/2000/svg" width="37" height="37" fill="none">
                         <path  
                         d="M27.447 10.324v-.5h.5v.5h-.5ZM11.449 27.03a.5.5 0 0 1-.708-.707l.707.707Zm2.916-17.205h13.082v1H14.365v-1Zm13.582.5v13.082h-1V10.323h1Zm-.147.354L11.448 27.03l-.707-.708L27.093 9.971l.707.707Z"/>

@@ -1,9 +1,8 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
 
-// Category list (you can fetch from API later)
-const categories = ref(['All', 'History', 'Philosophy', 'Literature', 'Novels'])
-
+const categories = ref(['All']) // Always include "All"
 const selectedCategory = ref('All')
 const emit = defineEmits(['select'])
 
@@ -11,7 +10,21 @@ const selectCategory = (category) => {
   selectedCategory.value = category
   emit('select', category)
 }
+
+// Fetch categories from API
+const fetchCategories = async () => {
+  try {
+    const res = await axios.get('http://localhost:8000/api/categories', { withCredentials: true })
+    // Extract names only and append to the default "All"
+    categories.value = ['All', ...res.data.map(cat => cat.name)]
+  } catch (err) {
+    console.error('Error fetching categories:', err)
+  }
+}
+
+onMounted(fetchCategories)
 </script>
+
 
 <template>
     <div class="">

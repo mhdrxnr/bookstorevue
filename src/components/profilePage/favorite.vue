@@ -4,6 +4,13 @@ import BookPopUp from '../storePage/BookPopUp.vue'
 import { useFavoriteStore } from '../../Stores/FavoritesStore.js'
 import { useCartStore } from '../../Stores/CartStore.js'
 
+function formatImage(image) {
+  if (!image) return 'https://via.placeholder.com/264x268?text=No+Image'
+  if (image.startsWith('http')) return image
+  return `http://localhost:8000/storage/${image}`
+}
+
+
 const favoriteStore = useFavoriteStore()
 const cartStore = useCartStore()
 const selectedBook = ref(null)
@@ -40,7 +47,6 @@ function handleAddToCart() {
 }
 
 function toggleLike(book) {
-  book.liked = !book.liked
   favoriteStore.toggleFavorite(book)
 }
 </script>
@@ -60,7 +66,7 @@ function toggleLike(book) {
         @click="openBookPopup(book)"
       >
         <div
-          :style="{ backgroundImage: `url(${book.image})` }"
+          :style="{ backgroundImage: `url(${formatImage(book.image)})` }"
           class="bg-center bg-cover w-[264px] h-[268px] rounded-[4px]"
         ></div>
 
@@ -88,8 +94,8 @@ function toggleLike(book) {
               fill="none"
             >
               <path
-                :stroke="favoriteStore.isFavorite(book.id) ? '#FF3535' : '#3D4A42'"
-                :fill="favoriteStore.isFavorite(book.id) ? '#FF3535' : 'none'"
+                :stroke="favoriteStore.isFavorite(book.book_id) ? '#FF3535' : '#3D4A42'"
+                :fill="favoriteStore.isFavorite(book.book_id) ? '#FF3535' : 'none'"
                 stroke-width="2"
                 d="M22.75 1c-3.69 0-6.371 2.6-7.25 3.9C14.621 3.6 11.81 1 7.59 1 2.319 1 1 4.9 1 9.45 1 14 10.667 22.883 15.5 27 20.114 23.1 30 14 30 9.45 30 4.21 27.364 1 22.75 1Z"
               />
