@@ -23,10 +23,24 @@
 </template>
 
 <script setup>
-const stats = {
-  books: 120,
-  categories: 8,
-  orders: 45,
-  clients: 30,
+import { ref, onMounted } from 'vue'
+import { api } from '../../axios' // adjust path as needed
+
+const stats = ref({
+  books: 0,
+  categories: 0,
+  orders: 0,
+  clients: 0,
+})
+
+const fetchStats = async () => {
+  try {
+    const res = await api.get('/admin/stats')
+    stats.value = res.data
+  } catch (err) {
+    console.error('Failed to load admin stats', err)
+  }
 }
+
+onMounted(fetchStats)
 </script>

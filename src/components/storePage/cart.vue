@@ -44,7 +44,7 @@ async function placeOrder() {
     const response = await api.post('/orders', orderPayload)
     console.log('✅ Order placed:', response.data)
 
-    alert('✅ Order placed successfully!')
+    alert('✅ Order placed successfully! we will call you to confirm your order.')
     cart.items = []
     handleCartClose()
   } catch (err) {

@@ -2,6 +2,7 @@
 import { defineStore } from 'pinia'
 import { ref, reactive } from 'vue'
 import { api, web } from '../axios' // make sure this path is correct
+import { useFavoriteStore } from './FavoritesStore'
 import router from '../router'
 
 export const useAuthStore = defineStore('auth', () => {
@@ -48,6 +49,8 @@ export const useAuthStore = defineStore('auth', () => {
 async function restoreSession() {
   try {
     console.log('🌀 Trying to restore session...')
+    console.log('✅ restoreSession complete:', isAuthenticated.value)
+console.log('➡️ localStorage.current_page =', localStorage.getItem('current_page'))
     isLoading.value = true
 
     await web.get('/sanctum/csrf-cookie')
@@ -109,6 +112,8 @@ if (savedPage) {
         role: userData.role
       })
       isAuthenticated.value = true
+         const favoriteStore = useFavoriteStore()
+         await favoriteStore.fetchFavorites()
       currentPage.value = userData.role === 'admin' ? 'admin' : 'store'
       router.push('/' + currentPage.value)
       localStorage.setItem('current_page', currentPage.value)
