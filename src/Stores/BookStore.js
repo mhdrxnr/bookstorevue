@@ -1,6 +1,6 @@
 // Stores/BookStore.js
 import { defineStore } from 'pinia'
-import axios from 'axios'
+import { api } from '../axios'
 
 export const useBookStore = defineStore('book', {
   state: () => ({
@@ -11,8 +11,9 @@ export const useBookStore = defineStore('book', {
     async fetchBooks() {
       this.isLoading = true
       try {
-        const res = await axios.get('/books')
-        this.books = res.data
+        const res = await api.get('/books')
+        // 👇 Check if books are inside res.data.data
+        this.books = res.data.data || res.data
       } catch (err) {
         console.error('Error fetching books:', err)
       } finally {

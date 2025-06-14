@@ -1,8 +1,9 @@
 <script setup>
-import { ref, computed, onMounted, defineProps, watchEffect } from 'vue'
-import axios from 'axios'
+import { ref, computed, onMounted, defineProps } from 'vue'
+import { useBookStore } from '../../Stores/BookStore.js'
 import { useCartStore } from '../../Stores/CartStore.js'
 import { useFavoriteStore } from '../../Stores/FavoritesStore.js'
+import { useAuthStore } from '../../Stores/AuthStore.js'
 import BookPopUp from './BookPopUp.vue'
 
 const props = defineProps({
@@ -16,43 +17,33 @@ const props = defineProps({
   }
 })
 
-
-const allBooks = ref([])
 const selectedBook = ref(null)
 const showPopup = ref(false)
-const cart = useCartStore()
-const favoriteStore = useFavoriteStore()
 const currentPage = ref(1)
 const booksPerPage = 40
 
-// Fetch books from API
-async function fetchBooks() {
-  try {
-    const res = await axios.get('/books')
-    allBooks.value = res.data
-  } catch (error) {
-    console.error("Failed to fetch books:", error)
-  }
-}
+const cart = useCartStore()
+const favoriteStore = useFavoriteStore()
+const authStore = useAuthStore()
+const bookStore = useBookStore()
+
+// Fetch books on mount
 
 
-onMounted(async () => {
-  await favoriteStore.fetchFavorites()
-  await fetchBooks()
-})
+// Enrich books with liked property
+const enrichedBooks = computed(() =>
+  bookStore.books.map(book => ({
+    ...book,
+    id: book.book_id,
+    liked: favoriteStore.isFavorite(book.book_id)
+  }))
+)
 
-watchEffect(() => {
-  allBooks.value.forEach(book => {
-    book.liked = favoriteStore.isFavorite(book.book_id)
-  })
-})
-
-
-// Filtering based on category
+// Filtering based on category and search
 const filteredBooks = computed(() => {
   let books = props.selectedCategory === 'All'
-    ? allBooks.value
-    : allBooks.value.filter(book => book.category?.name === props.selectedCategory)
+    ? enrichedBooks.value
+    : enrichedBooks.value.filter(book => book.category?.name === props.selectedCategory)
 
   if (props.search.trim()) {
     const keyword = props.search.toLowerCase()
@@ -65,9 +56,9 @@ const filteredBooks = computed(() => {
   return books
 })
 
-
-
-const totalPages = computed(() => Math.ceil(filteredBooks.value.length / booksPerPage))
+const totalPages = computed(() =>
+  Math.ceil(filteredBooks.value.length / booksPerPage)
+)
 
 const displayedBooks = computed(() => {
   const start = (currentPage.value - 1) * booksPerPage
@@ -83,16 +74,27 @@ function closePopup() {
   showPopup.value = false
 }
 
-const toggleLike = async (book) => {
-  await favoriteStore.toggleFavorite(book)
+async function toggleLike(book) {
+  const userId = authStore.user?.user_id
+
+  if (!userId) {
+    alert('🔒 You need to log in to like books.')
+    return
+  }
+
+  try {
+    await favoriteStore.toggleFavorite(book, userId)
+    book.liked = favoriteStore.isFavorite(book.book_id)
+  } catch (error) {
+    alert('An error occurred while updating your favorites.')
+    console.error(error)
+  }
 }
 
 
-
-
 function handleAddToCart() {
-  if (!selectedBook.value || !selectedBook.value.id) return
-  const existing = cart.items.find(item => item.id === selectedBook.value.id)
+  if (!selectedBook.value || !selectedBook.value.book_id) return
+  const existing = cart.items.find(item => item.book_id === selectedBook.value.book_id)
   cart.addToCart(selectedBook.value)
   alert(existing ? "📦 Book quantity increased in the cart." : "✅ Book added to cart!")
 }
@@ -123,6 +125,8 @@ const paginationRange = computed(() => {
   return rangeWithDots
 })
 </script>
+
+
 
 <template>
   <div class="container flex flex-col items-center mx-auto">

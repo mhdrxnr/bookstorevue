@@ -79,7 +79,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import api from '../../axios'
+import { api, web } from '../../axios'
 
 const bookErrors = ref({})
 
@@ -100,7 +100,7 @@ const showEditModal = ref(false)
 
 const fetchBooks = async () => {
   try {
-    const res = await api.get('/api/books')
+    const res = await api.get('/books')
     books.value = res.data
   } catch (err) {
     console.error('Failed to fetch books:', err)
@@ -109,7 +109,7 @@ const fetchBooks = async () => {
 
 const fetchCategories = async () => {
   try {
-    const res = await api.get('/api/categories')
+    const res = await api.get('/categories')
     categories.value = res.data
   } catch (err) {
     console.error('Failed to fetch categories:', err)

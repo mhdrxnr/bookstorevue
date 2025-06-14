@@ -6,8 +6,9 @@ import Service from './landingPage/service.vue'
 import Footerr from './landingPage/footer.vue'
 import BasePop from './landingPage/basePop.vue'
 import Registration from './landingPage/registration.vue'
-import { authStore } from '../Stores/AuthStore'
+import { useAuthStore } from '../Stores/AuthStore'
 
+const authStore = useAuthStore()
 </script>
 
 <template>

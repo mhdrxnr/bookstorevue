@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import BookPopUp from '../storePage/BookPopUp.vue'
 import { useFavoriteStore } from '../../Stores/FavoritesStore.js'
 import { useCartStore } from '../../Stores/CartStore.js'
+import { useAuthStore } from '../../Stores/AuthStore.js'
 
 function formatImage(image) {
   if (!image) return 'https://via.placeholder.com/264x268?text=No+Image'
@@ -13,6 +14,7 @@ function formatImage(image) {
 
 const favoriteStore = useFavoriteStore()
 const cartStore = useCartStore()
+const authStore = useAuthStore()
 const selectedBook = ref(null)
 const showPopup = ref(false)
 
@@ -47,8 +49,16 @@ function handleAddToCart() {
 }
 
 function toggleLike(book) {
-  favoriteStore.toggleFavorite(book)
+  const userId = authStore.user?.user_id
+  if (!userId) {
+    alert("🔒 You need to log in to manage favorites.")
+    return
+  }
+
+  favoriteStore.toggleFavorite(book, userId)
 }
+
+
 </script>
 
 <template>

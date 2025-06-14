@@ -2,9 +2,12 @@
 import Feedback from '../../assets/Feedback 3D Model (HD).png'
 import Book from '../../assets/Open Book And Bulb 3D Illustration.png'
 import Box from '../../assets/Box Protection.png'
-import { authStore } from '../../Stores/AuthStore'
+import { useAuthStore } from '../../Stores/AuthStore'
 
+
+const authStore = useAuthStore()
 function onProfileClick() {
+  
   if (authStore.isAuthenticated) {
     authStore.goToProfile()
   } else {

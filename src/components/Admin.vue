@@ -8,7 +8,9 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { useAuthStore } from '../Stores/AuthStore'
+
 import AdminSidebar from './admin/AdminSidebar.vue'
 import AdminHome from './admin/AdminHome.vue'
 import AdminBooks from './admin/AdminBooks.vue'
@@ -16,16 +18,17 @@ import AdminCategories from './admin/AdminCategories.vue'
 import AdminOrders from './admin/AdminOrders.vue'
 import AdminClients from './admin/AdminClients.vue'
 
-import { authStore } from '../Stores/AuthStore'
-import { onMounted } from 'vue';
+// ✅ Correct way to use Pinia store
+const authStore = useAuthStore()
 
-
+// ✅ Redirect if not authenticated or not admin
 onMounted(() => {
-  if (!authStore.isAuthenticated || authStore.user.role !== 'admin') {
-    window.location.href = '/'; // redirect to home if not admin
+  if (!authStore.isAuthenticated || authStore.user?.role !== 'admin') {
+    window.location.href = '/landing'
   }
-});
+})
 
+// Section routing
 const current = ref('home')
 const componentMap = {
   home: AdminHome,
@@ -35,8 +38,9 @@ const componentMap = {
   clients: AdminClients
 }
 
+// Logout and redirect
 function handleLogout() {
-  authStore.logout()  // call the logout method in authStore
-  window.location.href = '/'  // redirect to landing or login page after logout
+  authStore.logout()
+  window.location.href = '/landing'
 }
 </script>

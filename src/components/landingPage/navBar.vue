@@ -1,7 +1,7 @@
 
 <script setup>
 import { computed, ref, watch } from 'vue'
-import { authStore } from '../../Stores/AuthStore'
+import { useAuthStore } from '../../Stores/AuthStore'
 import router from '../../router/index.js'
 import Profile from '../../assets/User_lightbig.png'
 
@@ -12,6 +12,9 @@ defineProps({
 const emit = defineEmits(['toggle-cart', 'search'])
 const query = ref('')
 
+// ✅ Use Pinia version of authStore
+const authStore = useAuthStore()
+
 function onSearch() {
   if (query.value.trim() !== '') {
     emit('search', query.value)
@@ -19,10 +22,9 @@ function onSearch() {
   }
 }
 
-// 👇 NEW: Watch query and emit '' when cleared
 watch(query, (newVal) => {
   if (newVal.trim() === '') {
-    emit('search', '')  // Show all books when cleared
+    emit('search', '')
     console.log('Search cleared, showing all books')
   }
 })
@@ -45,6 +47,7 @@ const imageUrl = computed(() => {
     : Profile
 })
 </script>
+
 
 
 <template>

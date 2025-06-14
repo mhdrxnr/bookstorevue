@@ -1,13 +1,27 @@
-<script setup >
-import {ref, watch} from 'vue'
+<script setup>
+import { ref, watch, computed } from 'vue'
 import Profile from '../../assets/User_lightbig.png'
-import { authStore} from '../../Stores/AuthStore';
-console.log('authStore.user', authStore.user.imageUrl)
-watch(() => authStore.user, (val) => {
-  console.log("Updated user data in Infos.vue", val)
-}, { deep: true })
+import { useAuthStore } from '../../Stores/AuthStore' // ✅ Import as function
 
+const authStore = useAuthStore() // ✅ Initialize store
+
+// ✅ Optional: Computed profile image URL (fallback if needed)
+const profileImage = computed(() => {
+  return authStore.user.imageUrl
+    ? authStore.user.imageUrl + '?' + Date.now()
+    : Profile
+})
+
+// ✅ Watch for user updates
+watch(
+  () => authStore.user,
+  (val) => {
+    console.log("Updated user data in Infos.vue", val)
+  },
+  { deep: true }
+)
 </script>
+
 
 <template>
     <div class="w-[738px] h-[691px] flex flex-col gap-[50px]">

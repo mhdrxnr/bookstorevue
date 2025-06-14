@@ -1,16 +1,19 @@
-import { reactive } from 'vue'
-import api from '../axios'
+// stores/authStore.js
+import { defineStore } from 'pinia'
+import { ref, reactive } from 'vue'
+import { api, web } from '../axios' // make sure this path is correct
 import router from '../router'
 
-export const authStore = reactive({
-  showLogin: false,
-  showRegister: false,
-  isAuthenticated: false,
-  showProfile: false,
-  isLoading: true,
-  currentPage: localStorage.getItem('current_page') || 'landing',
-  token: null,
-  user: {
+export const useAuthStore = defineStore('auth', () => {
+  const showLogin = ref(false)
+  const showRegister = ref(false)
+  const isAuthenticated = ref(false)
+  const showProfile = ref(false)
+  const isLoading = ref(true)
+  const currentPage = ref(localStorage.getItem('current_page') || 'landing')
+  const token = ref(null)
+ 
+  const user = reactive({
     user_id: null,
     client_id: null,
     firstName: '',
@@ -21,50 +24,10 @@ export const authStore = reactive({
     wilaya: '',
     imageUrl: '',
     role: 'client'
-  },
+  })
 
-  async restoreSession() {
-  try {
-    await api.get('/sanctum/csrf-cookie') // Always safe to refresh cookie
-    const response = await api.get('/api/me') // ✅ call backend to get real user session
-
-    const user = response.data
-    const client = user.client || {}
-
-    this.setUser({
-      user_id: user.user_id,
-      client_id: client.client_id || null,
-      firstName: client.firstName || '',
-      lastName: client.lastName || '',
-      email: user.email || '',
-      number: client.number || '',
-      address: client.address || '',
-      wilaya: client.wilaya || '',
-      imageUrl: client.imageUrl || '',
-      role: user.role
-    })
-
-    this.isAuthenticated = true
-    const storedPage = localStorage.getItem('current_page')
-    if (storedPage) {
-      this.currentPage = storedPage
-      router.push('/' + storedPage)
-    }
-  } catch (error) {
-    console.warn('Session restore failed:', error)
-    this.isAuthenticated = false
-    this.token = null
-    localStorage.removeItem('auth_user')
-    localStorage.removeItem('auth_token')
-    localStorage.removeItem('current_page')
-    this.currentPage = 'landing'
-    router.push('/landing')
-  }
-},
-
-
-  setUser(userData) {
-    this.user = {
+  function setUser(userData) {
+    Object.assign(user, {
       user_id: userData.user_id,
       client_id: userData.client_id,
       firstName: userData.firstName || '',
@@ -75,72 +38,95 @@ export const authStore = reactive({
       wilaya: userData.wilaya || '',
       imageUrl: userData.imageUrl || '',
       role: userData.role || 'client'
-    }
+    })
+    localStorage.setItem('auth_user', JSON.stringify(user))
+    localStorage.setItem('auth_token', token.value || '')
+  }
 
-    localStorage.setItem('auth_user', JSON.stringify(this.user))
-    localStorage.setItem('auth_token', this.token || '')
-  },
 
-  async loginWithApi(email, password) {
+
+async function restoreSession() {
+  try {
+    console.log('🌀 Trying to restore session...')
+    isLoading.value = true
+
+    await web.get('/sanctum/csrf-cookie')
+    const response = await api.get('/me')
+
+    const userData = response.data
+    const client = userData.client || {}
+
+    setUser({
+      user_id: userData.user_id,
+      client_id: client?.client_id || null,
+      firstName: client?.firstName || '',
+      lastName: client?.lastName || '',
+      email: userData.email || '',
+      number: client?.number || '',
+      address: client?.address || '',
+      wilaya: client?.wilaya || '',
+      imageUrl: client?.imageUrl || '',
+      role: userData.role
+    })
+
+       isAuthenticated.value = true
+
+    // ✅ Set currentPage based on role only if not already stored
+    const savedPage = localStorage.getItem('current_page')
+if (savedPage) {
+  currentPage.value = savedPage
+} else {
+  currentPage.value = userData.role === 'admin' ? 'admin' : 'store'
+  localStorage.setItem('current_page', currentPage.value)
+}
+  } catch (error) {
+    console.warn('🚫 Not logged in:', error)
+    isAuthenticated.value = false
+    token.value = null
+  } finally {
+    isLoading.value = false
+  }
+}
+
+
+
+  async function loginWithApi(email, password) {
     try {
-      await api.get('/sanctum/csrf-cookie')
-      const response = await api.post('/api/login', { email, password })
-
-      const user = response.data.user
-      const client = response.data.client
-
-      this.token = response.data.token || ''
-      this.setUser({
-        user_id: user.user_id,
+      await web.get('/sanctum/csrf-cookie')
+      const response = await api.post('/login', { email, password })
+      const { user: userData, client, token: t } = response.data
+      // token.value = t || ''
+      setUser({
+        user_id: userData.user_id,
         client_id: client?.client_id || null,
         firstName: client?.firstName || '',
         lastName: client?.lastName || '',
-        email: user.email,
+        email: userData.email,
         number: client?.number || '',
         address: client?.address || '',
         wilaya: client?.wilaya || '',
         imageUrl: client?.imageUrl || '',
-        role: user.role
+        role: userData.role
       })
-
-      this.isAuthenticated = true
-
-      if (this.user.role === 'admin') {
-        this.currentPage = 'admin'
-        router.push('/admin')
-      } else {
-        this.currentPage = 'store'
-        router.push('/store')
-      }
-      localStorage.setItem('current_page', this.currentPage)
-      this.closePopup()
+      isAuthenticated.value = true
+      currentPage.value = userData.role === 'admin' ? 'admin' : 'store'
+      router.push('/' + currentPage.value)
+      localStorage.setItem('current_page', currentPage.value)
+      closePopup()
     } catch (error) {
       console.error('Login failed:', error)
       alert(error.response?.data?.message || 'Login failed. Please try again.')
     }
-  },
+  }
 
-  async updateUser(userPayload) {
-    if (!this.user.user_id) throw new Error('No user_id set')
-    return api.put(`/api/users/${this.user.user_id}`, userPayload)
-  },
-
-  async updateClient(payload) {
-    if (!this.user.client_id) throw new Error('No client_id set')
-    const config = {
-      headers: { 'Content-Type': 'multipart/form-data' }
-    }
-    return api.post(`/api/clients/${this.user.client_id}?_method=PUT`, payload, config)
-  },
-
-  async logout() {
+  async function logout() {
     try {
       await api.post('/api/logout')
     } catch (error) {
       console.error('Logout failed:', error)
     }
-    this.token = null
-    this.user = {
+    token.value = null
+    Object.assign(user, {
       user_id: null,
       client_id: null,
       firstName: '',
@@ -151,84 +137,126 @@ export const authStore = reactive({
       wilaya: '',
       imageUrl: '',
       role: 'client'
-    }
-    this.isAuthenticated = false
-    this.currentPage = 'landing'
+    })
+    isAuthenticated.value = false
+    currentPage.value = 'landing'
     localStorage.removeItem('auth_user')
     localStorage.removeItem('auth_token')
     localStorage.removeItem('current_page')
     window.location.href = '/landing'
-  },
-
-  async fetchUser() {
-  this.isLoading = true
-  try {
-    const response = await api.get('/api/user')
-    const user = response.data.user
-    const client = response.data.client
-
-    if (user && client) {
-      this.setUser({
-        user_id: user.user_id,
-        client_id: client?.client_id || null,
-        firstName: client?.firstName || '',
-        lastName: client?.lastName || '',
-        email: user.email || '',
-        number: client?.number || '',
-        address: client?.address || '',
-        wilaya: client?.wilaya || '',
-        imageUrl: client?.imageUrl || '',
-        role: user.role
-      })
-      this.isAuthenticated = true // ✅ make sure this is set
-    } else {
-      this.user = null
-      this.isAuthenticated = false
-    }
-  } catch (error) {
-    console.error('fetchUser failed', error)
-    this.user = null
-    this.isAuthenticated = false
-  } finally {
-    this.isLoading = false
   }
-},
 
-  toggleLogin() {
-    this.showLogin = !this.showLogin
-    if (this.showLogin) this.showRegister = false
-  },
-  openLogin() {
-    this.showLogin = true
-    this.showRegister = false
-  },
-  openRegister() {
-    this.showLogin = false
-    this.showRegister = true
-  },
-  closePopup() {
-    this.showLogin = false
-    this.showRegister = false
-  },
-  goToProfile() {
-    this.currentPage = 'profile'
+  async function updateUser(userPayload) {
+    if (!user.user_id) throw new Error('No user_id set')
+    return api.put(`/users/${user.user_id}`, userPayload)
+  }
+
+  async function updateClient(payload) {
+    if (!user.client_id) throw new Error('No client_id set')
+    return api.post(`/clients/${user.client_id}?_method=PUT`, payload, {
+      headers: { 'Content-Type': 'multipart/form-data' }
+    })
+  }
+
+  async function fetchUser() {
+  isLoading.value = true
+  try {
+    // 1. Ensure CSRF cookie for Sanctum session auth
+    await api.get('/sanctum/csrf-cookie')
+
+    // 2. Use the correct route that loads favoriteBooks
+    const response = await api.get('/me', { withCredentials: true })
+
+    // 3. Assuming you still return user + client data
+    const userData = response.data
+    const client = userData.client || {}
+
+    setUser({
+      user_id: userData.user_id,
+      client_id: client?.client_id || null,
+      firstName: client?.firstName || '',
+      lastName: client?.lastName || '',
+      email: userData.email || '',
+      number: client?.number || '',
+      address: client?.address || '',
+      wilaya: client?.wilaya || '',
+      imageUrl: client?.imageUrl || '',
+      role: userData.role,
+      favorites: userData.favorite_books || [] // if returned here
+    })
+
+    isAuthenticated.value = true
+  } catch (error) {
+    console.error('fetchUser failed:', error)
+    isAuthenticated.value = false
+  } finally {
+    isLoading.value = false
+  }
+}
+
+
+  function toggleLogin() {
+    showLogin.value = !showLogin.value
+    if (showLogin.value) showRegister.value = false
+  }
+  function openLogin() {
+    showLogin.value = true
+    showRegister.value = false
+  }
+  function openRegister() {
+    showLogin.value = false
+    showRegister.value = true
+  }
+  function closePopup() {
+    showLogin.value = false
+    showRegister.value = false
+  }
+  function goToProfile() {
+    currentPage.value = 'profile'
     localStorage.setItem('current_page', 'profile')
     router.push('/profile')
-  },
-  goToStore() {
-    this.currentPage = 'store'
+  }
+  function goToStore() {
+    currentPage.value = 'store'
     localStorage.setItem('current_page', 'store')
     router.push('/store')
-  },
-  goToAdmin() {
-    this.currentPage = 'admin'
+  }
+  function goToAdmin() {
+    currentPage.value = 'admin'
     localStorage.setItem('current_page', 'admin')
     router.push('/admin')
-  },
-  isAdmin() {
-    return this.user.role === 'admin'
-  },
-  isClient() {
-    return this.user.role === 'client'
+  }
+  function isAdmin() {
+    return user.role === 'admin'
+  }
+  function isClient() {
+    return user.role === 'client'
+  }
+
+  return {
+    showLogin,
+    showRegister,
+    isAuthenticated,
+    showProfile,
+    isLoading,
+    currentPage,
+    token,
+    user,
+    setUser,
+    restoreSession,
+    loginWithApi,
+    logout,
+    updateUser,
+    updateClient,
+    fetchUser,
+    toggleLogin,
+    openLogin,
+    openRegister,
+    closePopup,
+    goToProfile,
+    goToStore,
+    goToAdmin,
+    isAdmin,
+    isClient
   }
 })

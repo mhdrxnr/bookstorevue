@@ -1,5 +1,7 @@
 <script setup>
-import { authStore } from '../../Stores/AuthStore'
+import { useAuthStore } from '../../Stores/AuthStore' // ✅ Correct import (case-sensitive and consistent)
+
+const authStore = useAuthStore() // ✅ Initialize the Pinia store
 
 function goBack() {
   authStore.goToStore()
@@ -13,14 +15,16 @@ const props = defineProps({
 function showInfos() {
   emit('switch-section', 'infos')
 }
+
 function showFavorites() {
   emit('switch-section', 'favorites')
 }
+
 function logout() {
   authStore.logout()
 }
-
 </script>
+
 
 
 

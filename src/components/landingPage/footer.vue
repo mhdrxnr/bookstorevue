@@ -88,7 +88,13 @@
         <div class="z-60 flex flex-col-reverse gap-[17px] justify-center items-center">
             <p class="w-[390px] h-[30px] cairo-regular text-[16px] text-clean-white">© 2025 www.yasminelghareb.com - All Rights Reserved.</p>
             <p class="w-[490px] text-center h-[60px] cairo-regular text-[16px] text-clean-white">Visit our bookstore in the heart of Mostaganem and explore a world of knowledge waiting on our shelves.</p>
-            <iframe class="w-[535px] h-[454px] rounded-[8px]" src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3230.7420806437785!2d0.0876923750564329!3d35.92881267250829!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128203b44d0c9d59%3A0xbc4e745388763be0!2z2YXZg9iq2KjYqSDZhdiz2KrYutin2YbZhSDZitin2LPZhdmK2YYg2KfZhNi62LHYqA!5e0!3m2!1sfr!2sdz!4v1748689171252!5m2!1sfr!2sdz" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <iframe
+            class="w-[535px] h-[454px] rounded-[8px] border-0"
+            src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3230.7420806437785!2d0.0876923750564329!3d35.92881267250829!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x128203b44d0c9d59%3A0xbc4e745388763be0!2z2YXZg9iq2KjYqSDZhdiz2KrYutin2YbZhSDZitin2LPZhdmK2YYg2KfZhNi62LHYqA!5e0!3m2!1sfr!2sdz!4v1748689171252!5m2!1sfr!2sdz"
+            allowfullscreen
+            loading="lazy"
+            referrerpolicy="no-referrer-when-downgrade">
+            </iframe>
         </div>
         
     </div>

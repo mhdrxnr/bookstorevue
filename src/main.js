@@ -1,30 +1,34 @@
 import { createApp } from 'vue'
 import App from './App.vue'
 import './style.css'
-import router from './router'
 import axios from 'axios'
 import { createPinia } from 'pinia'
-import { authStore } from './Stores/AuthStore'
+import router from './router'
+import { useAuthStore } from './Stores/AuthStore'
 
-axios.defaults.baseURL = 'http://localhost:8000/api/'
+axios.defaults.baseURL = 'http://localhost:8000'
 axios.defaults.withCredentials = true
 
 const app = createApp(App)
 const pinia = createPinia()
 app.use(pinia)
 
-const store = authStore
+const authStore = useAuthStore(pinia)
+router.afterEach((to) => {
+  const defaultTitle = 'My Bookstore'
+  document.title = to.meta.title || defaultTitle
+})
 
-// Detect route on refresh and set currentPage
-const path = window.location.pathname
-if (path.includes('/store')) store.currentPage = 'store'
-else if (path.includes('/profile')) store.currentPage = 'profile'
-else if (path.includes('/admin')) store.currentPage = 'admin'
-else store.currentPage = 'landing'
+authStore.restoreSession().then(() => {
+  const isLoggedIn = authStore.isAuthenticated
+  const currentPath = window.location.pathname
+  const savedPage = localStorage.getItem('current_page') 
 
-localStorage.setItem('current_page', store.currentPage)
+ if (isLoggedIn && savedPage && currentPath === '/' || currentPath === '/landing') {
+  router.replace(`/${savedPage}`)
+}
 
-store.restoreSession()
 
-app.use(router)
-app.mount('#app')
+  app.use(router)
+  app.mount('#app')
+})

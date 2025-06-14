@@ -1,10 +1,14 @@
 <script setup>
-import Loading from './components/landingPage/loading.vue'
-import { authStore } from './Stores/AuthStore'
 import { computed } from 'vue'
+import { useAuthStore } from './Stores/AuthStore' // ✅ Correct Pinia usage
+import Loading from './components/landingPage/loading.vue'
+
+// ✅ Call the store function
+const authStore = useAuthStore()
 
 const isLoading = computed(() => authStore.isLoading)
 </script>
+
 
 <template>
   <Loading v-if="isLoading" />

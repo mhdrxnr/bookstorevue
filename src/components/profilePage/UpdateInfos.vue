@@ -1,7 +1,18 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { authStore } from '../../Stores/AuthStore'
+import { useAuthStore } from '../../Stores/AuthStore' // ✅ Use Pinia convention
 import Profile from '../../assets/User_lightbig.png'
+
+const authStore = useAuthStore() // ✅ Access the store correctly
+const wilayas = [
+  "Adrar", "Chlef", "Laghouat", "Oum El Bouaghi", "Batna", "Béjaïa", "Biskra", "Béchar", "Blida", "Bouira",
+  "Tamanrasset", "Tébessa", "Tlemcen", "Tiaret", "Tizi Ouzou", "Alger", "Djelfa", "Jijel", "Sétif", "Saïda",
+  "Skikda", "Sidi Bel Abbès", "Annaba", "Guelma", "Constantine", "Médéa", "Mostaganem", "M'Sila", "Mascara",
+  "Ouargla", "Oran", "El Bayadh", "Illizi", "Bordj Bou Arréridj", "Boumerdès", "El Tarf", "Tindouf", "Tissemsilt",
+  "El Oued", "Khenchela", "Souk Ahras", "Tipaza", "Mila", "Aïn Defla", "Naâma", "Aïn Témouchent", "Ghardaïa",
+  "Relizane", "Timimoun", "Bordj Badji Mokhtar", "Ouled Djellal", "Beni Abbes", "In Salah", "In Guezzam",
+  "Touggourt", "Djanet", "El M'Ghair", "El Menia"
+]
 
 const imageUrl = ref(authStore.user?.imageUrl || '')
 const fileInput = ref(null)
@@ -56,7 +67,8 @@ async function handleSave() {
     }
 
     await authStore.updateClient(formData)
-authStore.user.imageUrl = imageUrl.value
+
+    authStore.user.imageUrl = imageUrl.value
 
     emit('save')
   } catch (error) {
@@ -65,6 +77,7 @@ authStore.user.imageUrl = imageUrl.value
   }
 }
 </script>
+
 
 
 <template>
@@ -111,11 +124,12 @@ authStore.user.imageUrl = imageUrl.value
             </div>
             <div class="w-[314px] h-[102px] flex flex-col gap-[5px]">
             <label class="">Wilaya</label>
-            <select v-if="authStore.user" v-model="authStore.user.wilaya" class="font-normal pl-[20px] border-1 rounded-[4px] leading-[60px] ml-[5px] border-soft-shadow">
-                <option value="alg">alg</option>
-                <option value="oran">oran</option>
-                <option value="mostaganem">mostaganem</option>
+            <select v-if="authStore.user" v-model="authStore.user.wilaya"
+              class="font-normal pl-[20px] border-1 rounded-[4px] leading-[60px] ml-[5px] border-soft-shadow">
+              <option disabled value="">-- Select Wilaya --</option>
+              <option v-for="w in wilayas" :key="w" :value="w">{{ w }}</option>
             </select>
+
             </div>
           </div>
         </div>

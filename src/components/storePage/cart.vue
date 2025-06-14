@@ -1,15 +1,68 @@
 <script setup>
-import image from '../../assets/book1.png'
 import { useCartStore } from '../../Stores/CartStore'
+import { useAuthStore } from '../../Stores/AuthStore' // If you're using Pinia (optional)
+import { web,api } from '../../axios'
 import { computed, ref } from 'vue'
+
 const cart = useCartStore()
+const authStore = useAuthStore ? useAuthStore() : null
+const userId = computed(() => authStore?.user?.user_id || null) // fallback if not using Pinia
+
 const emit = defineEmits(['close'])
 function handleCartClose() {
   emit('close')
 }
 
-const items = computed(() => cart.items)
-const total = computed(() => cart.total)
+const isPlacingOrder = ref(false)
+
+async function placeOrder() {
+  if (!userId.value) {
+    alert('You must be logged in to place an order.')
+    return
+  }
+
+  if (cart.items.length === 0) {
+    alert('Your cart is empty.')
+    return
+  }
+
+  isPlacingOrder.value = true
+
+  const orderPayload = {
+    user_id: userId.value, // ✅ Include user_id explicitly
+    totalPrice: cart.totalPrice + 250,
+    status: 'pending',
+    books: cart.items.map(book => ({
+      bookID: book.book_id,
+      quantity: book.quantity,
+      unitPrice: book.price
+    }))
+  }
+
+  try {
+    await web.get('/sanctum/csrf-cookie')
+    const response = await api.post('/orders', orderPayload)
+    console.log('✅ Order placed:', response.data)
+
+    alert('✅ Order placed successfully!')
+    cart.items = []
+    handleCartClose()
+  } catch (err) {
+    console.error('❌ Failed to place order:', err)
+    alert('❌ Failed to place order. Please try again.')
+  } finally {
+    isPlacingOrder.value = false
+  }
+}
+
+function formatImage(image) {
+  if (!image) return 'https://via.placeholder.com/101x128?text=No+Image'
+  if (image.startsWith('http')) return image
+  return `http://localhost:8000/storage/${image}`
+}
+
+
+
 </script>
 
 <template>
@@ -39,7 +92,7 @@ const total = computed(() => cart.total)
                     :key="item.id"
                  class="h-[128px] text-center border-b-2 text-soft-shadow">
                     <td class="cairo-regular  text-soft-shadow  py-[25px] flex gap-[25px]">
-                        <div :style="{backgroundImage:`url('${item.image}')`}" class="bg-center bg-cover w-[101px] h-[128px]">       
+                        <div :style="{backgroundImage:`url('${formatImage(item.image)}')`}" class="bg-center bg-cover w-[101px] h-[128px]">       
                         </div>
                         <div class="flex flex-col gap-[25px] items-start justify-center ">
                             <h1 class="font-bold ">{{item.title}}</h1>
@@ -47,7 +100,7 @@ const total = computed(() => cart.total)
                         </div>
                     </td>
                     <td class=" font-semibold ">
-                       {{ item.price}}.00da
+                       {{ item.price}}da
                     </td>
                     <td class="  pl-[22px]">
                         <div class="flex gap-[20px] justify-center items-center w-[104px] rounded-[50px] bg-[#d9d9d9] h-[29px]">
@@ -94,9 +147,12 @@ const total = computed(() => cart.total)
     
       <div>
         <button
-        class="mt-4 w-full cairo-regular font-semibold text-[24px] bg-forest-green text-warm-beige  py-2 h-[60px] rounded hover:bg-clean-white hover:text-forest-green hover:border hover:border-forest-green transition-all">
-        CHECKOUT
+          @click="placeOrder"
+          :disabled="isPlacingOrder"
+          class="mt-4 w-full cairo-regular font-semibold text-[24px] bg-forest-green text-warm-beige  py-2 h-[60px] rounded hover:bg-clean-white hover:text-forest-green hover:border hover:border-forest-green transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+          {{ isPlacingOrder ? 'Placing Order...' : 'CHECKOUT' }}
         </button>
+
       </div>
       </div>
      
